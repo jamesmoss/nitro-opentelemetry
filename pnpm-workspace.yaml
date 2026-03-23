@@ -2,3 +2,4 @@ packages:
   - playground
   - src
   - test/fixtures/*
+approveBuilds: esbuild

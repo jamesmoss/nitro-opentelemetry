@@ -1,6 +1,8 @@
 {
-  "extends": "./.nitro/types/tsconfig.json",
   "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "types": [
       "nitro-opentelemetry"
     ]

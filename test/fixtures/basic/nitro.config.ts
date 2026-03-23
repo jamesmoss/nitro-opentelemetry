@@ -1,7 +1,9 @@
-import { defineNitroConfig } from 'nitropack/config'
+import { defineNitroConfig } from 'nitro/config'
 import '../../../src/augment'
 
 export default defineNitroConfig({
+  serverDir: './',
+  imports: {},
   modules: [
       'nitro-opentelemetry'
   ],

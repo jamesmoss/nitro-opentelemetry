@@ -14,5 +14,5 @@ export default defineBuildConfig({
     },
   ],
   declaration: true,
-  externals: ['#imports', 'h3', 'nitropack', 'nitro-opentelemetry', 'nitropack/kit'],
+  externals: ['#imports', 'h3', 'nitro', 'nitro/types', 'nitro-opentelemetry'],
 })

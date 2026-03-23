@@ -1,3 +1,5 @@
+import { defineTracedEventHandler } from 'nitro-opentelemetry/runtime/utils'
+
 export default defineTracedEventHandler(() => {
   return fetch('https://jsonplaceholder.typicode.com/todos/1').then(response => response.json());
 });

@@ -5,5 +5,8 @@ export default defineConfig({
         global: {
             rootDir: 'test/fixtures/basic'
         }
+    },
+    test: {
+        pool: 'threads'
     }
 })

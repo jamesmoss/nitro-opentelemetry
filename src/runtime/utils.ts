@@ -3,9 +3,10 @@ import type {
   EventHandlerResponse,
   EventHandler,
   EventHandlerObject,
+  H3Event,
 } from "h3"
 import * as api from "@opentelemetry/api"
-import { defineEventHandler } from "h3"
+import { defineHandler } from "h3"
 
 const context = api.context
 
@@ -14,15 +15,16 @@ export function defineTracedEventHandler<
   Response = EventHandlerResponse,
 >(handler: EventHandler<Request, Response> | EventHandlerObject<Request, Response>) {
   if (isEventHandler(handler)) {
-    return defineEventHandler<Request, Response>((event) => {
+    return defineHandler<Request, Response>((event) => {
       return context.with(event.otel.ctx, handler, undefined, event)
     })
   } else if (isEventHandlerObject(handler)) {
     const { handler: h, ...rest } = handler
-    return defineEventHandler({
+    if (!h) throw new Error("EventHandlerObject must have a handler function")
+    return defineHandler({
       ...rest,
       handler: (event) => {
-        return context.with(event.otel.ctx, h, undefined, event)
+        return context.with(event.otel.ctx, h as (event: H3Event) => unknown, undefined, event)
       },
     })
   }
