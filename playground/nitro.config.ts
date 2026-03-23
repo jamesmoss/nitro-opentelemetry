@@ -1,11 +1,10 @@
-//https://nitro.unjs.io/config
+//https://nitro.build/config
+import { defineNitroConfig } from 'nitro/config'
+
 export default defineNitroConfig({
-  srcDir: "server",
+  serverDir: "server",
   modules: [
     '../src/module.ts'
   ],
-  experimental: {
-    asyncContext: true
-  },
   compatibilityDate: '2025-01-03'
 });

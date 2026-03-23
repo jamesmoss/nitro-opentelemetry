@@ -1,3 +1,5 @@
+import { defineTracedEventHandler } from 'nitro-opentelemetry/runtime/utils'
+
 export default defineTracedEventHandler((e) => {
      const parentSpanId = e.otel.span.parentSpanContext?.spanId
     console.log(e.otel.span)

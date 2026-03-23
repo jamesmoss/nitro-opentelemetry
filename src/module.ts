@@ -1,4 +1,4 @@
-import type { Nitro } from 'nitropack'
+import type { Nitro } from 'nitro/types'
 import type { Plugin } from "rollup"
 import { presets } from './imports'
 import { resolvePath } from 'mlly'
@@ -8,7 +8,6 @@ import { normalize } from "pathe"
 import type { Nuxt } from "@nuxt/schema"
 import defu from 'defu'
 import type { Node } from "estree-walker"
-import { resolveNitroPath } from 'nitropack/kit'
 import { resolveModulePath} from "exsolve"
 
 type WithLocation<T = Node> = T & { start: number, end: number }
@@ -19,6 +18,30 @@ async function module(nitro: Nitro) {
     if (isPresetEntry(nitro)) {
         nitro.options.alias['#nitro-entry-file'] = nitro.options.entry
         nitro.options.entry = await getPresetFile(nitro)
+    }
+
+    // Ensure opentelemetry packages and the plugin itself are bundled (not externalized)
+    const noExternals = nitro.options.noExternals || []
+    if (Array.isArray(noExternals)) {
+        noExternals.push(
+            /nitro-opentelemetry/,
+            /@opentelemetry\//,
+        )
+        nitro.options.noExternals = noExternals
+    }
+
+    // Pre-resolve otel package paths so rolldown can find them from the plugin's location
+    const otelPackages = [
+        '@opentelemetry/api',
+        '@opentelemetry/semantic-conventions',
+        '@opentelemetry/sdk-trace-base',
+    ]
+    for (const pkg of otelPackages) {
+        try {
+            nitro.options.alias[pkg] = resolveModulePath(pkg, {
+                from: import.meta.url,
+            })
+        } catch { /* package not available, skip */ }
     }
 
     if (nitro.options.otel?.preset !== false) {
@@ -40,7 +63,7 @@ async function module(nitro: Nitro) {
                 async transform(code, id) {
                     const normalizedId = normalize(id)
                     // transform nitro entry file but there's probably a better way
-                    if (normalizedId.includes('runtime/entries') || this.getModuleInfo(id)?.isEntry) {
+                    if (normalizedId.includes('runtime/entries') || normalizedId.includes('presets/') || this.getModuleInfo(id)?.isEntry) {
                         const s = new MagicString(code)
                         s.prepend(`import '#nitro-opentelemetry/init';`)
 
@@ -67,38 +90,29 @@ async function module(nitro: Nitro) {
     }
 
     if (nitro.options.imports) {
+        nitro.options.imports.presets ??= []
         nitro.options.imports.presets.push(presets)
     }
 
-    if (nitro.options.renderer) {
-        nitro.options.alias['#nitro-renderer'] = nitro.options.renderer
-        nitro.options.renderer = await resolvePath('nitro-opentelemetry/runtime/renderer/renderer', {
+    if (nitro.options.renderer?.handler) {
+        nitro.options.alias['#nitro-renderer'] = nitro.options.renderer.handler
+        nitro.options.renderer.handler = await resolvePath('nitro-opentelemetry/runtime/renderer/renderer', {
             extensions: ['.mjs', '.ts']
-        })
-        nitro.options.externals = defu(nitro.options.externals, {
-            inline: [nitro.options.renderer]
         })
     }
 
     if (nitro.options.errorHandler) {
-        // nitro < 2.10
         if (typeof nitro.options.errorHandler === 'string') {
             nitro.options.alias['#nitro-error-handler'] = nitro.options.errorHandler
             nitro.options.errorHandler = await resolvePath('nitro-opentelemetry/runtime/renderer/error', {
                 extensions: ['.mjs', '.ts']
             })
-
-            nitro.options.externals = defu(nitro.options.externals, {
-                inline: [nitro.options.errorHandler]
-            })
         } else if (Array.isArray(nitro.options.errorHandler)) {
-            // nitro >= 2.10
             nitro.hooks.hook('rollup:before',async  (nitro, rollupConfig) => {
                 const errorHandlers = await Promise.all((nitro.options.errorHandler as string[]).map((path) => {
-                     return resolveModulePath(resolveNitroPath(path, nitro.options), {
+                     return resolveModulePath(path, {
                         from: [
                             import.meta.url,
-                            ...nitro.options.nodeModulesDirs,
                             nitro.options.rootDir
                         ],
                         extensions: ['.mjs', '.ts', '.js', '.cjs']
@@ -107,10 +121,6 @@ async function module(nitro: Nitro) {
                 ;(rollupConfig.plugins as Plugin[]).push({
                     name: 'nitro-otel:inject-error-handlers',
                     async transform(code, id) {
-                        if(id.includes('prod')) {
-                            console.log(id, errorHandlers.includes(normalize(id)), errorHandlers)
-
-                        }
                         if (errorHandlers.includes(normalize(id))) {
                             const s = new MagicString(code)
                             s.prepend(`import { context } from "@opentelemetry/api";\n`)

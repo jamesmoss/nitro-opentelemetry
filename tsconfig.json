@@ -1,14 +1,13 @@
-{ 
+{
   "include": ["./src/*", "./src/**/*"],
   "compilerOptions": {
     "strict": true,
-      "module": "ESNext",
+    "module": "ESNext",
     "target": "ESNext",
-    "lib": ["ESNext"],  
+    "lib": ["ESNext"],
     "moduleResolution": "bundler",
     "types": [
       "@nuxt/nitro-server"
     ]
-  },
-  "extends": "./.nitro/types/tsconfig.json"
+  }
 }

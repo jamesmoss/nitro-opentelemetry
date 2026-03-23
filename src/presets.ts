@@ -1,5 +1,5 @@
 import { resolvePath } from "mlly";
-import type { Nitro } from "nitropack";
+import type { Nitro } from "nitro/types";
 import { logger } from "./logger";
 
 export async function getPresetFile(nitro: Nitro) {

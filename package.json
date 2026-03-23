@@ -33,7 +33,7 @@
     "build": "unbuild",
     "dev": "pnpm --filter=playground dev",
     "dev:build": "pnpm --filter=playground build",
-    "dev:prepare": "pnpm build --stub && pnpm nitropack prepare && pnpm nitro prepare ./playground",
+    "dev:prepare": "pnpm build --stub && pnpm nitro prepare ./playground",
     "lint": "eslint .",
     "lint:fix": "automd && eslint . --fix",
     "prepack": "pnpm build",
@@ -53,11 +53,11 @@
     "changelogen": "^0.6.2",
     "eslint": "^9.39.4",
     "eslint-config-unjs": "^0.6.2",
-    "h3": "^1.15.10",
+    "h3": "^2.0.1-rc.18",
     "jiti": "^2.6.1",
+    "nitro": "^3.0.260311-beta",
     "nitro-opentelemetry": "link:./",
-    "nitro-test-utils": "^0.11.2",
-    "nitropack": "^2.13.2",
+    "nitro-test-utils": "^1.1.0",
     "typescript": "^5.9.3",
     "unbuild": "^3.6.1",
     "vitest": "^4.1.0"
@@ -87,5 +87,12 @@
   },
   "peerDependencies": {
     "@microlabs/otel-cf-workers": "1.0.0-rc.52"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@parcel/watcher",
+      "protobufjs"
+    ]
   }
 }
